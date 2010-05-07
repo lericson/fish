@@ -14,6 +14,10 @@ Usage? Simple enough::
     ...     churn_churn()
     ...     fish.animate()
 
+`See a demo on YouTube`__.
+
+__ http://www.youtube.com/watch?v=tCoAPrO_fA0
+
 The default fish is a simple bass at a pretty good velocity for an ASCII fish.
 
 Possibilities are endless here, gentlemen:
