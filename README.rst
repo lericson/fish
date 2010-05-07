@@ -21,3 +21,7 @@ Possibilities are endless here, gentlemen:
     The only limit is yourself.
 
     -- zombo.com
+
+`Fork on GitHub`__
+
+__ http://github.com/lericson/fish
