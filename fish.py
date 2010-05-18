@@ -210,16 +210,16 @@ class BirdLook(SwimFishBase):
 
     own_length = len(bird[0])
 
-class SmallBirdLook(SwimFishBase):
+class DuckLook(MultiLineFishPrinter):
     # ASCII art crediT: jgs
-    bird = docstring2lines("""
+    duck = docstring2lines("""
      _ 
 \. _(9>
  \==_) 
   -'=  
 """)
 
-    bird_rev = docstring2lines("""
+    duck_rev = docstring2lines("""
  _     
 <6)_ ,/
  (_==/ 
@@ -227,9 +227,9 @@ class SmallBirdLook(SwimFishBase):
 """)
 
     def render(self, step, reverse=False):
-        return self.bird_rev if reverse else self.bird
+        return self.duck_rev if reverse else self.duck
 
-    own_length = len(bird[0])
+    own_length = len(duck[0])
 
 class SwimFishNoSync(SwimFishBase):
     @classmethod
