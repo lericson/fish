@@ -19,7 +19,20 @@
 import sys
 import time
 import string
+
+from struct import unpack
+from fcntl import ioctl
+from termios import TIOCGWINSZ
+
 from itertools import cycle, count
+
+def get_term_width():
+    """Get terminal width or None."""
+    for fp in sys.stdin, sys.stdout, sys.stderr:
+        try:
+            return unpack("hh", ioctl(fp.fileno(), TIOCGWINSZ, "    "))[1]
+        except IOError:
+            continue
 
 class ANSIControl(object):
     def __init__(self, outfile=sys.stderr, flush=True):
@@ -43,7 +56,9 @@ class ANSIControl(object):
     def move_down(self, n): self.ansi("%dE" % n)
 
 class SwimFishBase(object):
-    def __init__(self, velocity=10, world_length=79, outfile=sys.stderr):
+    def __init__(self, velocity=10, world_length=None, outfile=sys.stderr):
+        if not world_length:
+            world_length = get_term_width() or 79
         self.worldstep = self.make_worldstepper()
         self.velocity = velocity
         self.world_length = world_length
