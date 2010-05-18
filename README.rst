@@ -32,7 +32,7 @@ Want to show numeric progress when you know the total number?::
 
 `See a demo on YouTube`__.
 
-__ http://www.youtube.com/watch?v=tCoAPrO_fA0
+__ http://www.youtube.com/watch?v=xYeG5CVTCmk
 
 The default fish is a simple bass at a pretty good velocity for an ASCII fish.
 
