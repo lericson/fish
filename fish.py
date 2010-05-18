@@ -95,6 +95,14 @@ default_fish = Fish()
 animate = default_fish.animate
 
 if __name__ == "__main__":
-    while True:
-        animate()
-        time.sleep(0.1)
+    try:
+        total = int(sys.argv[1])
+        f = Fish(tot=total)
+        for i in range(total):
+            f.animate(amt=i+1)
+            time.sleep(0.1)
+    except IndexError: 
+        while True:
+            animate()
+            time.sleep(0.1)
+    
