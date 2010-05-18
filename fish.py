@@ -66,6 +66,11 @@ class SwimFishBase(object):
         self.ansi = ANSIControl(outfile=outfile)
         self.last_hash = 0
 
+    def test(self):
+        while True:
+            self.animate()
+            time.sleep(0.1)
+
     @property
     def actual_length(self):
         # Refit the world so that we can move along an axis and not worry about
@@ -135,6 +140,13 @@ class ProgressableFishBase(SwimFishBase):
             pad += 6
             self.world_length -= pad
         self.total = total
+
+    def test(self):
+        if not self.total:
+            return super(ProgressableFishBase, self).test()
+        for i in xrange(1, self.total * 2 + 1):
+            self.animate(amount=i)
+            time.sleep(0.025)
 
     def animate(self, *args, **kwds):
         prev_amount = getattr(self, "amount", None)
@@ -255,7 +267,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
     fish = default_fish
-    amounts = None
 
     if sys.argv[1:]:
         if sys.argv[1] == "--bird":
@@ -263,13 +274,5 @@ if __name__ == "__main__":
         else:
             total = int(sys.argv[1])
             fish = Fish(total=total)
-            amounts = xrange(1, total + 1)
 
-    if amounts:
-        for amount in amounts:
-            fish.animate(amount=amount)
-            time.sleep(0.1)
-    else:
-        while True:
-            fish.animate()
-            time.sleep(0.1)
+    fish.test()
