@@ -47,13 +47,17 @@ class SwimFishBase(object):
         actual_length = self.world_length - self.own_length
         # As there are two directions we pretend the world is twice as large as
         # it really is
-        pos = (self.velocity * step) % (actual_length * 2)
+        if amt and self.tot:
+             pos = (amt/float(self.tot))*float(actual_length)
+             pos += actual_length #so it moves left to right
+        else:
+             pos = (self.velocity * step) % (actual_length * 2)
         reverse = pos < actual_length
         pos = int(round(abs(pos - actual_length), 0))
         fish = self.render(reverse=reverse)
         of = outfile or self.outfile
         curr_hash = force or hash((of, pos, fish))
-        if force or curr_hash != self.last_hash:
+        if force or amt or curr_hash != self.last_hash:
             lead = " " * (pos)
             trail = " " * (self.world_length - self.own_length - pos)
             of.write("\x1b[2K\r" + lead + fish + trail + amount + "\r")
