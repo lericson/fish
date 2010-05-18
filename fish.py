@@ -261,17 +261,49 @@ class Bird(SwimFishTimeSync, BirdLook):
 default_fish = Fish()
 animate = default_fish.animate
 
+fish_types = {"bass": BassLook,
+              "salmon": SalmonLook,
+              "bird": BirdLook,
+              "duck": DuckLook}
+
 if __name__ == "__main__":
     import signal
+    import optparse
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
-    fish = default_fish
+    parser = optparse.OptionParser()
+    parser.add_option("-f", "--fish", choices=fish_types.keys() + ["?"],
+                      default="bass", help="fish type (specify ? to list)")
+    parser.add_option("-v", "--velocity", type=int, default=10, metavar="V",
+                      help="fish velocity (default: 10)")
+    parser.add_option("--sync", choices=("none", "time"), default="time",
+                      help="synchronization mechanism")
 
-    if sys.argv[1:]:
-        if sys.argv[1] == "--bird":
-            fish = Bird()
-        else:
-            total = int(sys.argv[1])
-            fish = Fish(total=total)
+    opts, args = parser.parse_args()
 
+    if opts.fish == "?":
+        for fish_name, fish_type in fish_types.items():
+            print fish_name
+            print "=" * len(fish_name)
+            print
+            class TempFish(SwimFishTimeSync, fish_type):
+                pass
+            normal = TempFish().render(0, reverse=False)
+            reverse = TempFish().render(0, reverse=True)
+            for normline, revline in zip(normal, reverse):
+                print normline, "  ", revline
+            print
+        sys.exit(0)
+    else:
+        fish_look = fish_types[opts.fish]
+
+    if opts.sync == "time":
+        fish_sync = SwimFishTimeSync
+    elif opts.sync == "none":
+        fish_sync = SwimFishNoSync
+
+    class FishType(fish_sync, fish_look):
+        pass
+
+    fish = FishType()
     fish.test()
