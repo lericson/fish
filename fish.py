@@ -18,6 +18,7 @@
 
 import sys
 import time
+import string
 from itertools import cycle, count
 
 class ANSIControl(object):
@@ -38,6 +39,8 @@ class ANSIControl(object):
     def clear_whole(self): self.ansi("2J")
     def save_cursor(self): self.ansi("s")
     def restore_cursor(self): self.ansi("u")
+    def move_up(self, n): self.ansi("%dF" % n)
+    def move_down(self, n): self.ansi("%dE" % n)
 
 class SwimFishBase(object):
     def __init__(self, velocity=10, world_length=79, outfile=sys.stderr):
@@ -58,21 +61,52 @@ class SwimFishBase(object):
         pos = (self.velocity * step) % (actual_length * 2)
         reverse = pos < actual_length
         pos = int(round(abs(pos - actual_length), 0))
-        fish = self.render(reverse=reverse)
+        fish = self.render(step=step, reverse=reverse)
         of = outfile or self.outfile
-        curr_hash = force or hash((of, pos, fish))
+        curr_hash = force or hash((of, pos, "".join(fish)))
         if force or curr_hash != self.last_hash:
-            self.print_line(of, pos, fish)
+            self.print_fish(of, pos, fish)
             of.flush()
             self.last_hash = curr_hash
 
-    def print_line(self, of, pos, fish):
+    def print_fish(self, of, pos, fish):
+        raise NotImplementedError("you must choose a printer type")
+
+class SingleLineFishPrinter(SwimFishBase):
+    def print_fish(self, of, pos, fish):
         lead = " " * pos
         trail = " " * (self.world_length - self.own_length - pos)
         self.ansi.clear_line_whole()
-        of.write(lead + fish + trail + "\r")
+        assert len(fish) == 1
+        of.write(lead + fish[0] + trail + "\r")
+
+class MultiLineFishPrinter(SwimFishBase):
+    _printed = False
+
+    def __init__(self, *args, **kwds):
+        super(MultiLineFishPrinter, self).__init__(*args, **kwds)
+        self.reset()
+
+    def reset(self):
+        """Call this when reusing the animation in a new place"""
+        self._printed = False
+
+    def _restore_cursor(self, lines):
+        if self._printed:
+            self.ansi.move_up(lines)
+        self._printed = True
+
+    def print_fish(self, of, pos, fish):
+        lead = " " * pos
+        trail = " " * (self.world_length - self.own_length - pos)
+        self._restore_cursor(len(fish))
+        self.ansi.clear_forward()
+        for line in fish:
+            of.write(lead + line + trail + "\n")
 
 class ProgressableFishBase(SwimFishBase):
+    """Progressing fish, only compatible with single-line fish"""
+
     def __init__(self, *args, **kwds):
         total = kwds.pop("total", None)
         super(ProgressableFishBase, self).__init__(*args, **kwds)
@@ -91,9 +125,9 @@ class ProgressableFishBase(SwimFishBase):
             kwds["force"] = True
         return super(ProgressableFishBase, self).animate(*args, **kwds)
 
-    def print_line(self, of, pos, fish):
+    def print_fish(self, of, pos, fish):
         if not self.amount:
-            return super(ProgressableFishBase, self).print_line(of, pos, fish)
+            return super(ProgressableFishBase, self).print_fish(of, pos, fish)
 
         # Get the progress text
         if self.total:
@@ -106,19 +140,66 @@ class ProgressableFishBase(SwimFishBase):
         lead = " " * pos
         trail = " " * (self.world_length - self.own_length - pos)
         self.ansi.clear_line_whole()
-        of.write(lead + fish + trail + progress + "\r")
+        assert len(fish) == 1
+        of.write(lead + fish[0] + trail + progress + "\r")
 
 class BassLook(SwimFishBase):
-    def render(self, reverse=False):
-        return "<'((<" if reverse else ">))'>"
+    def render(self, step, reverse=False):
+        return ["<'((<" if reverse else ">))'>"]
 
     own_length = len(">))'>")
 
 class SalmonLook(SwimFishBase):
-    def render(self, reverse=False):
-        return "<*}}}><" if reverse else "><{{{*>"
+    def render(self, step, reverse=False):
+        return ["<*}}}><" if reverse else "><{{{*>"]
 
-    own_length = len("><{{{*>")
+def docstring2lines(ds):
+    return filter(None, ds.split("\n"))
+rev_trans = string.maketrans(r"/\<>76", r"\/></9")
+def ascii_rev(ascii):
+    return [line.translate(rev_trans)[::-1] for line in ascii]
+
+class BirdLook(SwimFishBase):
+    # ASCII credit: "jgs"
+    bird = r"""
+           ___     
+       _,-' ______ 
+     .'  .-'  ____7
+    /   /   ___7   
+  _|   /  ___7     
+>(')\ | ___7       
+  \\/     \_______ 
+  '        _======>
+  `'----\\`        
+"""
+    bird = docstring2lines(bird)
+    bird_rev = ascii_rev(bird)
+
+    def render(self, step, reverse=False):
+        return self.bird if reverse else self.bird_rev
+
+    own_length = len(bird[0])
+
+class SmallBirdLook(SwimFishBase):
+    # ASCII art crediT: jgs
+    bird = docstring2lines("""
+     _ 
+\. _(9>
+ \==_) 
+  -'=  
+""")
+
+    bird_rev = docstring2lines("""
+ _     
+<6)_ ,/
+ (_==/ 
+  ='-  
+""")
+
+    def render(self, step, reverse=False):
+        return self.bird_rev if reverse else self.bird
+
+    own_length = len(bird[0])
 
 class SwimFishNoSync(SwimFishBase):
     @classmethod
@@ -130,10 +211,14 @@ class SwimFishTimeSync(SwimFishBase):
     def make_worldstepper(cls):
         return iter(time.time, None)
 
-class Fish(ProgressableFishBase, SwimFishTimeSync, BassLook):
+class Fish(ProgressableFishBase, SingleLineFishPrinter,
+           SwimFishTimeSync, BassLook):
     """The default swimming fish, the one you very likely want to use.
     See module-level documentation.
     """
+
+class Bird(MultiLineFishPrinter, SwimFishTimeSync, BirdLook):
+    """What? A bird?"""
 
 default_fish = Fish()
 animate = default_fish.animate
@@ -142,15 +227,22 @@ if __name__ == "__main__":
     import signal
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
-    if sys.argv[1:]:
-        total = int(sys.argv[1])
-        fish = Fish(total=total)
-        amounts = xrange(1, total + 1)
-    else:
-        fish = default_fish
-        amounts = cycle((None,))
+    fish = default_fish
+    amounts = None
 
-    for amount in amounts:
-        fish.animate(amount=amount)
-        time.sleep(0.1)
-    
+    if sys.argv[1:]:
+        if sys.argv[1] == "--bird":
+            fish = Bird()
+        else:
+            total = int(sys.argv[1])
+            fish = Fish(total=total)
+            amounts = xrange(1, total + 1)
+
+    if amounts:
+        for amount in amounts:
+            fish.animate(amount=amount)
+            time.sleep(0.1)
+    else:
+        while True:
+            fish.animate()
+            time.sleep(0.1)
