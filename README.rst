@@ -26,18 +26,19 @@ decided to implement just that::
 
 Want to show the current record number?::
 
-    >>> import fish
+    >>> from fish import ProgressFish
+    >>> fish = ProgressFish()
     >>> for i, x in enumerate(churning):
     ...     churn_churn()
     ...     fish.animate(amount=i)
 
 Want to show numeric progress when you know the total number?::
 
-    >>> import fish
-    >>> f = fish.Fish(total=len(data))
+    >>> from fish import ProgressFish
+    >>> fish = ProgressFish(total=len(data))
     >>> for i, datum in enumerate(data):
     ...     churn_churn()
-    ...     f.animate(amount=i)
+    ...     fish.animate(amount=i)
 
 `See a demo on YouTube`__.
 

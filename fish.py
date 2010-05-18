@@ -255,6 +255,9 @@ class Fish(SwimFishTimeSync, BassLook):
     See module-level documentation.
     """
 
+class ProgressFish(SwimFishProgressSync, BassLook):
+    """A progress-based swimming fish."""
+
 class Bird(SwimFishTimeSync, BirdLook):
     """What? A bird?"""
 
