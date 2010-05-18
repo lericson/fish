@@ -20,7 +20,24 @@ import sys
 import time
 from itertools import cycle, count
 
-ANSI_LINE_CLEAR = "\x1b[2K\r"
+class ANSIControl(object):
+    def __init__(self, outfile=sys.stderr, flush=True):
+        self.outfile = outfile
+        self.flush = flush
+
+    def ansi(self, command):
+        self.outfile.write("\x1b[%s" % command)
+        if self.flush:
+            self.outfile.flush()
+
+    def clear_line_right(self): self.ansi("0K\r")
+    def clear_line_left(self): self.ansi("1K\r")
+    def clear_line_whole(self): self.ansi("2K\r")
+    def clear_forward(self): self.ansi("0J")
+    def clear_backward(self): self.ansi("1J")
+    def clear_whole(self): self.ansi("2J")
+    def save_cursor(self): self.ansi("s")
+    def restore_cursor(self): self.ansi("u")
 
 class SwimFishBase(object):
     def __init__(self, velocity=10, world_length=79, outfile=sys.stderr):
@@ -28,6 +45,7 @@ class SwimFishBase(object):
         self.velocity = velocity
         self.world_length = world_length
         self.outfile = outfile
+        self.ansi = ANSIControl(outfile=outfile)
         self.last_hash = 0
 
     def animate(self, outfile=None, force=False):
@@ -51,7 +69,8 @@ class SwimFishBase(object):
     def print_line(self, of, pos, fish):
         lead = " " * pos
         trail = " " * (self.world_length - self.own_length - pos)
-        of.write(ANSI_LINE_CLEAR + lead + fish + trail + "\r")
+        self.ansi.clear_line_whole()
+        of.write(lead + fish + trail + "\r")
 
 class ProgressableFishBase(SwimFishBase):
     def __init__(self, *args, **kwds):
@@ -86,7 +105,8 @@ class ProgressableFishBase(SwimFishBase):
 
         lead = " " * pos
         trail = " " * (self.world_length - self.own_length - pos)
-        of.write(ANSI_LINE_CLEAR + lead + fish + trail + progress + "\r")
+        self.ansi.clear_line_whole()
+        of.write(lead + fish + trail + progress + "\r")
 
 class BassLook(SwimFishBase):
     def render(self, reverse=False):
