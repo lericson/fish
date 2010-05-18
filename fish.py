@@ -66,16 +66,19 @@ class SwimFishBase(object):
         self.ansi = ANSIControl(outfile=outfile)
         self.last_hash = 0
 
-    def animate(self, outfile=None, force=False):
-        step = self.worldstep.next()
+    @property
+    def actual_length(self):
         # Refit the world so that we can move along an axis and not worry about
         # overflowing
-        actual_length = self.world_length - self.own_length
+        return self.world_length - self.own_length
+
+    def animate(self, outfile=None, force=False):
+        step = self.worldstep.next()
         # As there are two directions we pretend the world is twice as large as
         # it really is, then handle the overflow
-        pos = (self.velocity * step) % (actual_length * 2)
-        reverse = pos < actual_length
-        pos = int(round(abs(pos - actual_length), 0))
+        pos = (self.velocity * step) % (self.actual_length * 2)
+        reverse = pos < self.actual_length
+        pos = int(round(abs(pos - self.actual_length), 0))
         fish = self.render(step=step, reverse=reverse)
         of = outfile or self.outfile
         curr_hash = force or hash((of, pos, "".join(fish)))
@@ -225,6 +228,15 @@ class SwimFishTimeSync(SwimFishBase):
     @classmethod
     def make_worldstepper(cls):
         return iter(time.time, None)
+
+class SwimFishProgressSync(ProgressableFishBase):
+    def make_worldstepper(self):
+        return iter(self.worldstep_progressive, None)
+
+    def worldstep_progressive(self):
+        part = self.amount / float(self.total)
+        step = (self.actual_length + part * self.actual_length) / self.velocity
+        return step
 
 class Fish(ProgressableFishBase, SingleLineFishPrinter,
            SwimFishTimeSync, BassLook):
