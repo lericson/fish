@@ -20,15 +20,15 @@ Want to show the current record number?::
     >>> import fish
     >>> for i, x in enumerate(churning):
     ...     churn_churn()
-    ...     fish.animate(amt=i)
+    ...     fish.animate(amount=i)
 
 Want to show numeric progress when you know the total number?::
 
     >>> import fish
-    >>> f = fish.Fish(tot=len(data))
+    >>> f = fish.Fish(total=len(data))
     >>> for i, datum in enumerate(data):
     ...     churn_churn()
-    ...     f.animate(amt=i)
+    ...     f.animate(amount=i)
 
 `See a demo on YouTube`__.
 
