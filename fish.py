@@ -173,13 +173,13 @@ class ProgressableFishBase(SwimFishBase):
         assert len(fish) == 1
         of.write(lead + fish[0] + trail + progress + "\r")
 
-class BassLook(SwimFishBase):
+class BassLook(SingleLineFishPrinter):
     def render(self, step, reverse=False):
         return ["<'((<" if reverse else ">))'>"]
 
     own_length = len(">))'>")
 
-class SalmonLook(SwimFishBase):
+class SalmonLook(SingleLineFishPrinter):
     def render(self, step, reverse=False):
         return ["<*}}}><" if reverse else "><{{{*>"]
 
@@ -189,7 +189,7 @@ rev_trans = string.maketrans(r"/\<>76", r"\/></9")
 def ascii_rev(ascii):
     return [line.translate(rev_trans)[::-1] for line in ascii]
 
-class BirdLook(SwimFishBase):
+class BirdLook(MultiLineFishPrinter):
     # ASCII credit: "jgs"
     bird = r"""
            ___     
@@ -250,13 +250,12 @@ class SwimFishProgressSync(ProgressableFishBase):
         step = (self.actual_length + part * self.actual_length) / self.velocity
         return step
 
-class Fish(ProgressableFishBase, SingleLineFishPrinter,
-           SwimFishTimeSync, BassLook):
+class Fish(SwimFishTimeSync, BassLook):
     """The default swimming fish, the one you very likely want to use.
     See module-level documentation.
     """
 
-class Bird(MultiLineFishPrinter, SwimFishTimeSync, BirdLook):
+class Bird(SwimFishTimeSync, BirdLook):
     """What? A bird?"""
 
 default_fish = Fish()
