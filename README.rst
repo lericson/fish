@@ -15,6 +15,15 @@ Usage? Simple enough::
     ...     churn_churn()
     ...     fish.animate()
 
+As a boy, I often dreamed of birds going back and forth as progress bars, so I
+decided to implement just that::
+
+    >>> import fish
+    >>> bird = fish.Bird()
+    >>> while churning:
+    ...     churn_churn()
+    ...     bird.animate()
+
 Want to show the current record number?::
 
     >>> import fish
