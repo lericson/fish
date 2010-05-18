@@ -21,30 +21,42 @@ import time
 from itertools import count
 
 class SwimFishBase(object):
-    def __init__(self, velocity=10, world_length=79, outfile=sys.stderr):
+    def __init__(self, velocity=10, world_length=79, outfile=sys.stderr, tot=None):
+	if tot > 0:
+		pad = len(str(tot))*2
+		pad += 1
+		world_length = world_length - pad
         self.worldstep = self.make_worldstepper()
         self.velocity = velocity
         self.world_length = world_length
         self.outfile = outfile
         self.last_hash = 0
+	self.tot = tot
 
-    def animate(self, outfile=None, force=False):
+    def animate(self, outfile=None, force=False, amt=None):
+	if amt:
+		if self.tot:
+			amount = '%s/%s' % (str(amt).rjust(len(str(self.tot))), self.tot)
+		else:
+			amount = '%s' % amt
+	else:
+		amount = ''
         step = self.worldstep.next()
         # Refit the world so that we can move along an axis and not worry about
         # overflowing
         actual_length = self.world_length - self.own_length
         # As there are two directions we pretend the world is twice as large as
         # it really is
-        pos = (self.velocity * step) % (self.world_length * 2)
-        reverse = pos < self.world_length
-        pos = int(round(abs(pos - self.world_length), 0))
+        pos = (self.velocity * step) % (actual_length * 2)
+        reverse = pos < actual_length
+        pos = int(round(abs(pos - actual_length), 0))
         fish = self.render(reverse=reverse)
         of = outfile or self.outfile
         curr_hash = force or hash((of, pos, fish))
         if force or curr_hash != self.last_hash:
-            lead = " " * pos
-            trail = " " * (self.world_length - len(fish) - pos)
-            of.write("\x1b[2K\r" + lead + fish + trail + "\r")
+            lead = " " * (pos)
+            trail = " " * (self.world_length - self.own_length - pos)
+            of.write("\x1b[2K\r" + lead + fish + trail + amount + "\r")
             of.flush()
             self.last_hash = curr_hash
 
