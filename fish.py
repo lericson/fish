@@ -22,36 +22,33 @@ from itertools import count
 
 class SwimFishBase(object):
     def __init__(self, velocity=10, world_length=79, outfile=sys.stderr, tot=None):
-	if tot > 0:
-		pad = len(str(tot))*2
-		pad += 1
-		world_length = world_length - pad
+        if tot > 0:
+            pad = len(str(tot))*2
+            pad += 6
+            world_length = world_length - pad
         self.worldstep = self.make_worldstepper()
         self.velocity = velocity
         self.world_length = world_length
         self.outfile = outfile
         self.last_hash = 0
-	self.tot = tot
+        self.tot = tot
 
-    def animate(self, outfile=None, force=False, amt=None):
-	if amt:
-		if self.tot:
-			amount = '%s/%s' % (str(amt).rjust(len(str(self.tot))), self.tot)
-		else:
-			amount = '%s' % amt
-	else:
-		amount = ''
+    def animate(self, outfile=None, force=False, amt=''):
         step = self.worldstep.next()
         # Refit the world so that we can move along an axis and not worry about
         # overflowing
         actual_length = self.world_length - self.own_length
+        if amt and self.tot:
+            amount = '%s%% %s/%s' % \
+                (str(int(round(amt/float(self.tot)*100))).rjust(3), \
+                str(amt).rjust(len(str(self.tot))), self.tot)
+            pos = (amt/float(self.tot))*float(actual_length)
+            pos += actual_length #so it moves left to right
+        else:
+            amount = '%s' % amt
+            pos = (self.velocity * step) % (actual_length * 2)
         # As there are two directions we pretend the world is twice as large as
         # it really is
-        if amt and self.tot:
-             pos = (amt/float(self.tot))*float(actual_length)
-             pos += actual_length #so it moves left to right
-        else:
-             pos = (self.velocity * step) % (actual_length * 2)
         reverse = pos < actual_length
         pos = int(round(abs(pos - actual_length), 0))
         fish = self.render(reverse=reverse)
