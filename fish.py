@@ -119,14 +119,18 @@ default_fish = Fish()
 animate = default_fish.animate
 
 if __name__ == "__main__":
-    try:
+    import signal
+    signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
+
+    if sys.argv[1:]:
         total = int(sys.argv[1])
-        f = Fish(total=total)
-        for i in range(total):
-            f.animate(amount=i+1)
-            time.sleep(0.1)
-    except IndexError: 
-        while True:
-            animate()
-            time.sleep(0.1)
+        fish = Fish(total=total)
+        amounts = xrange(1, total + 1)
+    else:
+        fish = default_fish
+        amounts = cycle((None,))
+
+    for amount in amounts:
+        fish.animate(amount=amount)
+        time.sleep(0.1)
     
