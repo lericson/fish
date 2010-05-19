@@ -14,6 +14,16 @@
        for datum_to_churn in data:
            fish.animate()
            churn_churn(datum_to_churn)
+
+    Using other fish or birds:
+
+    .. code-block:: python
+
+       from fish import Bird
+
+       bird = Bird()
+       while True:
+           bird.animate()
 """
 
 import sys
