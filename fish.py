@@ -207,9 +207,9 @@ class BirdLook(MultiLineFishPrinter):
      .'  .-'  ____7
     /   /   ___7   
   _|   /  ___7     
->(')\ | ___7       
-  \\/     \_______ 
-  '        _======>
+>(@)\ | ___7       
+  \\/     \_____,.'__ 
+  '        _/''&;>*
   `'----\\`        
 """
     bird = docstring2lines(bird)
