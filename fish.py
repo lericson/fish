@@ -34,7 +34,7 @@ from struct import unpack
 from fcntl import ioctl
 from termios import TIOCGWINSZ
 
-from itertools import cycle, count
+from itertools import count
 
 def get_term_width():
     """Get terminal width or None."""
@@ -175,7 +175,7 @@ class ProgressableFishBase(SwimFishBase):
             done_text = str(self.amount).rjust(len(str(self.total)))
             progress = "%3.d%% %s/%d" % (part * 100, done_text, self.total)
         else:
-            progress = str(amount)
+            progress = str(self.amount)
 
         lead = " " * pos
         trail = " " * (self.world_length - self.own_length - pos)
