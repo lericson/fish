@@ -195,7 +195,13 @@ class SalmonLook(SingleLineFishPrinter):
 
 def docstring2lines(ds):
     return filter(None, ds.split("\n"))
-rev_trans = string.maketrans(r"/\<>76", r"\/></9")
+
+try:
+    maketrans = string.maketrans
+except AttributeError:
+    maketrans = str.maketrans
+rev_trans = maketrans(r"/\<>76", r"\/></9")
+
 def ascii_rev(ascii):
     return [line.translate(rev_trans)[::-1] for line in ascii]
 
