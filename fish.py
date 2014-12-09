@@ -142,6 +142,7 @@ class ProgressableFishBase(SwimFishBase):
 
     def __init__(self, *args, **kwds):
         total = kwds.pop("total", None)
+        self.total = total
         super(ProgressableFishBase, self).__init__(*args, **kwds)
         if total:
             # `pad` is the length required for the progress indicator,
@@ -149,7 +150,6 @@ class ProgressableFishBase(SwimFishBase):
             pad = len(str(total)) * 2
             pad += 6
             self.world_length -= pad
-        self.total = total
 
     def test(self):
         if not self.total:
@@ -168,17 +168,18 @@ class ProgressableFishBase(SwimFishBase):
     def print_fish(self, of, pos, fish):
         if not self.amount:
             return super(ProgressableFishBase, self).print_fish(of, pos, fish)
-
         # Get the progress text
         if self.total:
             part = self.amount / float(self.total)
             done_text = str(self.amount).rjust(len(str(self.total)))
             progress = "%3.d%% %s/%d" % (part * 100, done_text, self.total)
+            lead = " " * pos
+            trail = " " * (self.world_length - self.own_length - pos)
         else:
             progress = str(self.amount)
-
-        lead = " " * pos
-        trail = " " * (self.world_length - self.own_length - pos)
+            lead = " " * (pos - len(progress))
+            trail = " " * (self.world_length - self.own_length - pos -\
+                               len(progress))
         self.ansi.clear_line_whole()
         assert len(fish) == 1
         of.write(lead + fish[0] + trail + progress + "\r")
@@ -259,7 +260,8 @@ class SwimFishTimeSync(SwimFishBase):
 
 class SwimFishProgressSync(ProgressableFishBase):
     def make_worldstepper(self):
-        return iter(self.worldstep_progressive, None)
+        if self.total: return iter(self.worldstep_progressive, None)
+        else: return count()
 
     def worldstep_progressive(self):
         part = self.amount / float(self.total)
