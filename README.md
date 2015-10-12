@@ -10,42 +10,42 @@ some good 'ole data.
 
 Usage? Simple enough:
     
-    ```python
-    >>> import fish
-    >>> while churning:
-    ...     churn_churn()
-    ...     fish.animate()
-    ```
+```python
+>>> import fish
+>>> while churning:
+...     churn_churn()
+...     fish.animate()
+```
 As a boy, I often dreamed of birds going back and forth as progress bars, so I
 decided to implement just that:
     
-    ```python
-    >>> import fish
-    >>> bird = fish.Bird()
-    >>> while churning:
-    ...     churn_churn()
-    ...     bird.animate()
-    ```
+```python
+>>> import fish
+>>> bird = fish.Bird()
+>>> while churning:
+...     churn_churn()
+...     bird.animate()
+```
 
 Want to show the current record number?
 
-    ```python
-    >>> from fish import ProgressFish
-    >>> fish = ProgressFish()
-    >>> for i, x in enumerate(churning):
-    ...     churn_churn()
-    ...     fish.animate(amount=i)
-    ```
+```python
+>>> from fish import ProgressFish
+>>> fish = ProgressFish()
+>>> for i, x in enumerate(churning):
+...     churn_churn()
+...     fish.animate(amount=i)
+```
 
 Want to show numeric progress when you know the total number?:
 
-    ```python
-    >>> from fish import ProgressFish
-    >>> fish = ProgressFish(total=len(data))
-    >>> for i, datum in enumerate(data):
-    ...     churn_churn()
-    ...     fish.animate(amount=i)
-    ```
+```python
+>>> from fish import ProgressFish
+>>> fish = ProgressFish(total=len(data))
+>>> for i, datum in enumerate(data):
+...     churn_churn()
+...     fish.animate(amount=i)
+```
 
 [See a demo on YouTube](http://www.youtube.com/watch?v=xYeG5CVTCmk).
 
