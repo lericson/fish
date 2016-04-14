@@ -290,6 +290,7 @@ fish_types = {"bass": BassLook,
 if __name__ == "__main__":
     import signal
     import optparse
+    from __future__ import print_function
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
     parser = optparse.OptionParser()
@@ -304,16 +305,16 @@ if __name__ == "__main__":
 
     if opts.fish == "?":
         for fish_name, fish_type in fish_types.items():
-            print fish_name
-            print "=" * len(fish_name)
-            print
+            print(fish_name)
+            print("=" * len(fish_name))
+            print()
             class TempFish(SwimFishTimeSync, fish_type):
                 pass
             normal = TempFish().render(0, reverse=False)
             reverse = TempFish().render(0, reverse=True)
             for normline, revline in zip(normal, reverse):
-                print normline, "  ", revline
-            print
+                print(normline, "  ", revline)
+            print()
         sys.exit(0)
     else:
         fish_look = fish_types[opts.fish]
