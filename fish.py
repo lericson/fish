@@ -62,8 +62,8 @@ class ANSIControl(object):
     def clear_whole(self): self.ansi("2J")
     def save_cursor(self): self.ansi("s")
     def restore_cursor(self): self.ansi("u")
-    def move_up(self, n): self.ansi("%dF" % n)
-    def move_down(self, n): self.ansi("%dE" % n)
+    def move_up(self, n): self.ansi("%dA" % n)
+    def move_down(self, n): self.ansi("%dB" % n)
 
 class SwimFishBase(object):
     def __init__(self, velocity=10, world_length=None, outfile=sys.stderr):
@@ -209,15 +209,15 @@ def ascii_rev(ascii):
 class BirdLook(MultiLineFishPrinter):
     # ASCII credit: "jgs"
     bird = r"""
-           ___     
-       _,-' ______ 
-     .'  .-'  ____7
-    /   /   ___7   
-  _|   /  ___7     
->(@)\ | ___7       
-  \\/     \_____,.'__ 
-  '        _/''&;>*
-  `'----\\`        
+           ___       
+       _,-' ______   
+     .'  .-'  ____7  
+    /   /   ___7     
+  _|   /  ___7       
+>(@)\ | ___7         
+  \\/     \_____,.'__
+  '        _/''&;>*  
+  `'----\\`          
 """
     bird = docstring2lines(bird)
     bird_rev = ascii_rev(bird)
@@ -225,7 +225,8 @@ class BirdLook(MultiLineFishPrinter):
     def render(self, step, reverse=False):
         return self.bird if reverse else self.bird_rev
 
-    own_length = len(bird[0])
+    own_length = max(map(len, bird))
+    assert sum(map(len, bird)) / float(len(bird)) == own_length
 
 class DuckLook(MultiLineFishPrinter):
     # ASCII art crediT: jgs
@@ -246,7 +247,7 @@ class DuckLook(MultiLineFishPrinter):
     def render(self, step, reverse=False):
         return self.duck_rev if reverse else self.duck
 
-    own_length = len(duck[0])
+    own_length = max(map(len, duck))
 
 class SwimFishNoSync(SwimFishBase):
     @classmethod
