@@ -326,5 +326,5 @@ if __name__ == "__main__":
     class FishType(fish_sync, fish_look):
         pass
 
-    fish = FishType()
+    fish = FishType(velocity=opts.velocity)
     fish.test()
