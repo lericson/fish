@@ -25,6 +25,7 @@
        while True:
            bird.animate()
 """
+from __future__ import print_function
 
 import sys
 import time
@@ -290,7 +291,6 @@ fish_types = {"bass": BassLook,
 if __name__ == "__main__":
     import signal
     import optparse
-    from __future__ import print_function
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
     parser = optparse.OptionParser()
