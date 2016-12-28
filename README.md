@@ -47,7 +47,7 @@ Want to show numeric progress when you know the total number?:
 ...     fish.animate(amount=i)
 ```
 
-[See a demo on YouTube](http://www.youtube.com/watch?v=xYeG5CVTCmk).
+[See a demo on YouTube](https://www.youtube.com/watch?v=a8Po-a63uZ4).
 
 The default fish is a simple bass at a pretty good velocity for an ASCII fish.
 
