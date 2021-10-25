@@ -5,7 +5,7 @@ except ImportError:
 
 from os import path
 
-long_desc = open(path.join(path.dirname(__file__), "README.rst"), "U").read()
+long_desc = open(path.join(path.dirname(__file__), "README.md"), "U").read()
 
 setup(name="fish", version="1.1",
       url="http://sendapatch.se/",

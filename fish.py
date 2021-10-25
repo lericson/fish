@@ -15,15 +15,27 @@
            fish.animate()
            churn_churn(datum_to_churn)
 
+    With a progress indicator:
+
+    .. code-block:: python
+
+        import fish
+
+        progress = fish.ProgressFish(total=1000)
+        for i in range(1000):
+            progress.animate()
+            churn()
+
     Using other fish or birds:
 
     .. code-block:: python
 
-       from fish import Bird
+        from fish import Bird
 
-       bird = Bird()
-       while True:
-           bird.animate()
+        bird = Bird()
+        while True:
+            bird.animate()
+            churn()
 """
 
 import sys
@@ -36,6 +48,7 @@ from termios import TIOCGWINSZ
 
 from itertools import count
 
+
 def get_term_width():
     """Get terminal width or None."""
     for fp in sys.stdin, sys.stdout, sys.stderr:
@@ -43,6 +56,7 @@ def get_term_width():
             return unpack("hh", ioctl(fp.fileno(), TIOCGWINSZ, "    "))[1]
         except IOError:
             continue
+
 
 class ANSIControl(object):
     def __init__(self, outfile=sys.stderr, flush=True):
@@ -65,12 +79,13 @@ class ANSIControl(object):
     def move_up(self, n): self.ansi("%dA" % n)
     def move_down(self, n): self.ansi("%dB" % n)
 
+
 class SwimFishBase(object):
-    def __init__(self, velocity=10, world_length=None, outfile=sys.stderr):
+    def __init__(self, speed=1.0, world_length=None, outfile=sys.stderr):
         if not world_length:
             world_length = get_term_width() or 79
         self.worldstep = self.make_worldstepper()
-        self.velocity = velocity
+        self.speed = speed
         self.world_length = world_length
         self.outfile = outfile
         self.ansi = ANSIControl(outfile=outfile)
@@ -79,7 +94,7 @@ class SwimFishBase(object):
     def test(self):
         while True:
             self.animate()
-            time.sleep(0.1)
+            time.sleep(0.0125)
 
     @property
     def actual_length(self):
@@ -88,10 +103,10 @@ class SwimFishBase(object):
         return self.world_length - self.own_length
 
     def animate(self, outfile=None, force=False):
-        step = self.worldstep.next()
+        step = next(self.worldstep)
         # As there are two directions we pretend the world is twice as large as
         # it really is, then handle the overflow
-        pos = (self.velocity * step) % (self.actual_length * 2)
+        pos = (self.speed * step) % (self.actual_length * 2)
         reverse = pos < self.actual_length
         pos = int(round(abs(pos - self.actual_length), 0))
         fish = self.render(step=step, reverse=reverse)
@@ -105,6 +120,7 @@ class SwimFishBase(object):
     def print_fish(self, of, pos, fish):
         raise NotImplementedError("you must choose a printer type")
 
+
 class SingleLineFishPrinter(SwimFishBase):
     def print_fish(self, of, pos, fish):
         lead = " " * pos
@@ -112,6 +128,7 @@ class SingleLineFishPrinter(SwimFishBase):
         self.ansi.clear_line_whole()
         assert len(fish) == 1
         of.write(lead + fish[0] + trail + "\r")
+
 
 class MultiLineFishPrinter(SwimFishBase):
     _printed = False
@@ -137,6 +154,7 @@ class MultiLineFishPrinter(SwimFishBase):
         for line in fish:
             of.write(lead + line + trail + "\n")
 
+
 class ProgressableFishBase(SwimFishBase):
     """Progressing fish, only compatible with single-line fish"""
 
@@ -154,9 +172,9 @@ class ProgressableFishBase(SwimFishBase):
     def test(self):
         if not self.total:
             return super(ProgressableFishBase, self).test()
-        for i in xrange(1, self.total * 2 + 1):
+        for i in range(1, self.total * 2 + 1):
             self.animate(amount=i)
-            time.sleep(0.025)
+            time.sleep(0.0125)
 
     def animate(self, *args, **kwds):
         prev_amount = getattr(self, "amount", None)
@@ -178,11 +196,11 @@ class ProgressableFishBase(SwimFishBase):
         else:
             progress = str(self.amount)
             lead = " " * (pos - len(progress))
-            trail = " " * (self.world_length - self.own_length - pos -\
-                               len(progress))
+            trail = " " * (self.world_length - self.own_length - pos - len(progress))
         self.ansi.clear_line_whole()
         assert len(fish) == 1
         of.write(lead + fish[0] + trail + progress + "\r")
+
 
 class BassLook(SingleLineFishPrinter):
     def render(self, step, reverse=False):
@@ -190,12 +208,15 @@ class BassLook(SingleLineFishPrinter):
 
     own_length = len(">))'>")
 
+
 class SalmonLook(SingleLineFishPrinter):
     def render(self, step, reverse=False):
         return ["<*}}}><" if reverse else "><{{{*>"]
 
+
 def docstring2lines(ds):
-    return filter(None, ds.split("\n"))
+    return list(filter(None, ds.split("\n")))
+
 
 try:
     maketrans = string.maketrans
@@ -203,8 +224,10 @@ except AttributeError:
     maketrans = str.maketrans
 rev_trans = maketrans(r"/\<>76", r"\/></9")
 
+
 def ascii_rev(ascii):
     return [line.translate(rev_trans)[::-1] for line in ascii]
+
 
 class BirdLook(MultiLineFishPrinter):
     # ASCII credit: "jgs"
@@ -228,6 +251,7 @@ class BirdLook(MultiLineFishPrinter):
     own_length = max(map(len, bird))
     assert sum(map(len, bird)) / float(len(bird)) == own_length
 
+
 class DuckLook(MultiLineFishPrinter):
     # ASCII art crediT: jgs
     duck = docstring2lines("""
@@ -249,83 +273,94 @@ class DuckLook(MultiLineFishPrinter):
 
     own_length = max(map(len, duck))
 
+
 class SwimFishNoSync(SwimFishBase):
     @classmethod
     def make_worldstepper(cls):
         return count()
+
 
 class SwimFishTimeSync(SwimFishBase):
     @classmethod
     def make_worldstepper(cls):
         return iter(time.time, None)
 
+
 class SwimFishProgressSync(ProgressableFishBase):
     def make_worldstepper(self):
-        if self.total: return iter(self.worldstep_progressive, None)
-        else: return count()
+        if self.total:
+            return iter(self.worldstep_progressive, None)
+        else:
+            return count()
 
     def worldstep_progressive(self):
         part = self.amount / float(self.total)
-        step = (self.actual_length + part * self.actual_length) / self.velocity
+        step = (self.actual_length + part * self.actual_length) / self.speed
         return step
+
 
 class Fish(SwimFishTimeSync, BassLook):
     """The default swimming fish, the one you very likely want to use.
     See module-level documentation.
     """
 
+
 class ProgressFish(SwimFishProgressSync, BassLook):
     """A progress-based swimming fish."""
+
 
 class Bird(SwimFishTimeSync, BirdLook):
     """What? A bird?"""
 
+
 default_fish = Fish()
 animate = default_fish.animate
+
 
 fish_types = {"bass": BassLook,
               "salmon": SalmonLook,
               "bird": BirdLook,
               "duck": DuckLook}
 
+
 if __name__ == "__main__":
     import signal
-    import optparse
+    import argparse
     signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
 
-    parser = optparse.OptionParser()
-    parser.add_option("-f", "--fish", choices=fish_types.keys() + ["?"],
-                      default="bass", help="fish type (specify ? to list)")
-    parser.add_option("-v", "--velocity", type=int, default=10, metavar="V",
-                      help="fish velocity (default: 10)")
-    parser.add_option("--sync", choices=("none", "time"), default="time",
-                      help="synchronization mechanism")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--fish", choices=set(fish_types.keys()) | {"?"},
+                        default="bass", help="fish type (specify ? to list)")
+    parser.add_argument("-s", "--speed", type=int, default=1, metavar="V",
+                        help="fish speed")
+    parser.add_argument("--sync", choices=("none", "time"), default="time",
+                        help="synchronization mechanism")
 
-    opts, args = parser.parse_args()
+    args = parser.parse_args()
 
-    if opts.fish == "?":
+    if args.fish == "?":
         for fish_name, fish_type in fish_types.items():
-            print fish_name
-            print "=" * len(fish_name)
-            print
+            print(fish_name)
+            print("=" * len(fish_name))
+            print()
             class TempFish(SwimFishTimeSync, fish_type):
                 pass
             normal = TempFish().render(0, reverse=False)
             reverse = TempFish().render(0, reverse=True)
             for normline, revline in zip(normal, reverse):
-                print normline, "  ", revline
-            print
+                print(normline, "  ", revline)
+            print()
         sys.exit(0)
     else:
-        fish_look = fish_types[opts.fish]
+        fish_look = fish_types[args.fish]
 
-    if opts.sync == "time":
+    if args.sync == "time":
         fish_sync = SwimFishTimeSync
-    elif opts.sync == "none":
+    elif args.sync == "none":
         fish_sync = SwimFishNoSync
 
     class FishType(fish_sync, fish_look):
         pass
 
-    fish = FishType(velocity=opts.velocity)
+    fish = FishType(speed=args.speed)
     fish.test()
